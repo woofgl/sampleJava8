@@ -4,7 +4,7 @@ public class User{
 
     private String id;
     private String name;
-    private String age;
+    private Long age;
     private String sex;
 
     public User(String name) {
@@ -14,7 +14,7 @@ public class User{
     public User(String id, String name, String age,String sex) {
         this.id = id;
         this.name = name;
-        this.age = age;
+        this.age = Long.parseLong(age);
         this.sex = sex;
     }
 
@@ -26,11 +26,11 @@ public class User{
         this.id = id;
     }
 
-    public String getAge() {
+    public Long getAge() {
         return age;
     }
 
-    public void setAge(String age) {
+    public void setAge(Long age) {
         this.age = age;
     }
 
