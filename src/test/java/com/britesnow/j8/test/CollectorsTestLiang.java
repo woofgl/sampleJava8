@@ -1,9 +1,14 @@
 package com.britesnow.j8.test;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,41 +35,74 @@ public class CollectorsTestLiang {
         List<String> list = users.stream()
                                 .map(User::getName)
                                 .collect(Collectors.toList());
-        System.out.println(list);
+        System.out.println("nameList:"+list+"\n");
         
         // Accumulate names into a TreeSet
         Set<String> set = users.stream()
                                 .map(User::getName)
                                 .collect(Collectors.toCollection(TreeSet::new));
-        System.out.println(set);
+        System.out.println("TreeSet Name:"+set+"\n");
         
         
-        // Convert elements to strings and concatenate them, separated by commas
-        String joined = users.stream()
-                                .map(Object::toString)
-                                .collect(Collectors.joining(","));
-        System.out.println(joined);
-     
-        // Compute sum of age of users
+        //joining,Convert elements to strings and concatenate them, separated by commas
+        String joined = users.stream().map(Object::toString).collect(Collectors.joining());
+        System.out.println("Joining:"+joined+"\n");
+        
+        String joined1 = users.stream().map(Object::toString).collect(Collectors.joining(","));
+        System.out.println("Joining:"+joined1+"\n");
+        
+        String joined2 = users.stream().map(Object::toString).collect(Collectors.joining(",","#","*"));
+        System.out.println("Joining2:"+joined2+"\n");
+        
+        
+        //mapping
+        Map<Long, Set<String>> mapping = users.stream()
+                                .collect(Collectors.groupingBy(User::getAge,Collectors.mapping(User::getName,Collectors.toSet())));
+        System.out.println("mapping:"+mapping+"\n");
+        
+        
+        //summing,average,maxBy,minBy,counting
         long total = users.stream().collect(Collectors.summingLong(User::getAge));
-        System.out.println(total);
+        System.out.println("summingLong age:"+total+"\n");
         
-        // Compute average of age of users
         double averagingAge= users.stream().collect(Collectors.averagingLong(User::getAge));
-        System.out.println(averagingAge);
+        System.out.println("averagingLong Age:"+averagingAge+"\n");
         
-        // Group user by sex
+        Optional maxBy =users.stream().collect(Collectors.maxBy((s1,s2) -> s1.getName().length() > s2.getName().length() ? 1 : -1));
+        System.out.println("maxBy:"+maxBy+"\n");
+        
+        Optional minBy2 =users.stream().collect(Collectors.minBy((s1,s2) -> s1.getAge() > s2.getAge() ? 1 : -1));
+        System.out.println("minBy:"+minBy2+"\n");
+        
+        Long counting = users.stream().filter((u) -> u.getName().startsWith("J")).collect(Collectors.counting());
+        System.out.println("counting:"+counting+"\n");
+        
+        
+        //groupingBy,groupingByConcurrent
         Map<String,List<User>> byDept = users.stream().collect(Collectors.groupingBy(User::getSex));
-        System.out.println(byDept);
+        System.out.println("groupingBy sex:"+byDept+"\n");
         
-        // Compute sum of age by sex
-        Map<String,Long> totalByDept =users.stream().
-                                collect(Collectors.groupingBy(User::getSex, Collectors.summingLong(User::getAge)));
-        System.out.println(totalByDept);
+        Map<String,Long> totalByDept =users.stream().collect(Collectors.groupingBy(User::getSex, Collectors.summingLong(User::getAge)));
+        System.out.println("summingLong age by sex:"+totalByDept+"\n");
         
-        //Partition user age for 20 
-        Map<Boolean,List<User>> passingFailing = users.stream().collect(Collectors.partitioningBy(u -> u.getAge() > 20));
-        System.out.println(passingFailing);
+        ConcurrentMap<String, List<User>> groupingByConcurrent = users.stream().collect(Collectors.groupingByConcurrent(User::getSex));
+        System.out.println("groupingByConcurrent"+groupingByConcurrent+"\n");
+        
+        Map<String,Long> groupingByC = users.stream().collect(Collectors.groupingByConcurrent(User::getSex,Collectors.summingLong(User::getAge)));
+        System.out.println("groupingByConcurrent"+groupingByC+"\n");
+        
+        //Partition
+        Map<Boolean,List<User>> partitioningBy = users.stream().collect(Collectors.partitioningBy(u -> u.getAge() > 20));
+        System.out.println("partitioningBy:"+partitioningBy+"\n");
+        
+        
+        //Mapto
+        Map<String, User> userById = users.stream().collect(toMap(User::getId, Function.identity()));
+        System.out.println("userById:"+userById+"\n");
+        
+        Map<String,String> toMap = users.stream().collect(toMap(User::getName,User::getSex,(s,a) -> s +","+a));
+        System.out.println("toMap:"+toMap+"\n");
         
     }
+    
 }
