@@ -24,6 +24,23 @@ public class StreamTestLiang {
         List<User> users = Stream.of(userArray).map(data -> new User(data[0], data[1], data[2], data[3])).collect(Collectors.toList());
         System.out.println("users:" + users + "\n");
         
+        //forEach and forEachOrdered
+        System.out.println("list of users:");
+        users.stream().forEach(e -> System.out.print(e +" "));
+        System.out.println("\n");
+        
+        System.out.println("Parallel stream");
+        users.parallelStream().forEach(e -> System.out.print(e +" "));
+        System.out.println("\n");
+
+        System.out.println("Another parallel stream:");
+        users.parallelStream().forEach(e -> System.out.print(e +" "));
+        System.out.println("\n");
+        
+        System.out.println("With forEachOrdered:");
+        users.parallelStream().forEachOrdered(e -> System.out.print(e +" "));
+        System.out.println("\n");
+        
         //usersByMale
         Map<String, List<User>> usersByMale = users.stream().filter(u -> u.getSex().equals("male")).collect(groupingBy(User::getSex));
         System.out.println("usersByMale:"+usersByMale+"\n");
@@ -60,5 +77,13 @@ public class StreamTestLiang {
         //Reduce
         Optional<String> reduced = users.stream().map(u -> u.getName()).sorted().reduce((u1,u2) -> u1 + "#" + u2);
         reduced.ifPresent(System.out::println);
+        
+        Optional<User> findAny = users.stream().findAny();
+        System.out.println(findAny);
+        
+        Optional<User> findFrist = users.stream().findFirst();
+        System.out.println(findFrist);
+        
+        
     }
 }
