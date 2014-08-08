@@ -42,16 +42,36 @@ public class DateTestLiang {
         System.out.println("localDateTime2:"+localDateTime2);
         
         DateTimeFormatter germanFomatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.GERMAN);
+        String formatDate = today.format(germanFomatter);
+        System.out.println("FormatDate: "+formatDate);
         LocalDate xmas = LocalDate.parse("04.08.2014",germanFomatter);
         System.out.println(xmas);
 
         //compareTo
+        System.out.println("compareTo: ");
         System.out.println("compareTo "+today.compareTo(tomorrow));
         System.out.println("compareTo "+tomorrow.compareTo(today));
         System.out.println("compareTo "+yesterday.compareTo(tomorrow));
         System.out.println("compareTo "+tomorrow.compareTo(yesterday));
         //equals
+        
         System.out.println("equals "+today.equals(yesterday));
+        System.out.println("isAfter "+today.isAfter(yesterday));
+        System.out.println("isBefore "+today.isBefore(yesterday));
+        
+        //get
+        System.out.println("get: ");
+        System.out.println("getChronology: "+today.getChronology());
+        System.out.println("getDayOfYear: "+today.getDayOfYear());
+        System.out.println("getDayOfMonth: "+today.getDayOfMonth());
+        System.out.println("getMonthValue: "+today.getMonthValue());
+        System.out.println("getYear: "+today.getYear());
+        System.out.println("getMonth: "+today.getMonth());
+        System.out.println("getDayOfWeek: "+today.getDayOfWeek());
+        System.out.println("getEra: "+today.getEra());
+        
+        
+        System.out.println("hashCode: "+today.hashCode());
         
     }
     
