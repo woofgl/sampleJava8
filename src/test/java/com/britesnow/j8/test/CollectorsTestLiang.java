@@ -2,31 +2,39 @@ package com.britesnow.j8.test;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import com.britesnow.j8.Project;
 import com.britesnow.j8.User;
 
 public class CollectorsTestLiang {
+    
+    static String[][] userArray = {
+                            
+                            {"1", "John", "12","male"}, 
+                            {"2", "Juli", "21","female"},
+                            {"3", "Jason", "32","male"}, 
+                            {"4","Lily","21","female"}
+                        };
     @Test
-    public void streamTest(){
-        
-        String[][] userArray = {
-                                    {"1", "John", "12","male"}, 
-                                    {"2", "Juli", "21","female"},
-                                    {"3", "Jason", "32","male"}, 
-                                    {"4","Lily","21","female"}
-                                };
-        
+    public void collectorTest(){
         List<User> users = Stream.of(userArray)
                                 .map(data -> new User(data[0],data[1],data[2],data[3]))
                                 .collect(Collectors.toList());
@@ -103,6 +111,53 @@ public class CollectorsTestLiang {
         Map<String,String> toMap = users.stream().collect(toMap(User::getName,User::getSex,(s,a) -> s +","+a));
         System.out.println("toMap:"+toMap+"\n");
         
+    }
+    
+    //create custom collector
+    @Test
+    public void customCollectorTest(){
+        List<User> users = Stream.of(userArray)
+                                .map(data -> new User(data[0],data[1],data[2],data[3]))
+                                .collect(Collectors.toList());
+        System.out.println("Init users:\n" + users + "\n");
+        
+        ArrayList<User> userArrayList = users.stream().collect(Collectors.toCollection(ArrayList::new));
+        System.out.println("ArrayList users:\n" + userArrayList + "\n");
+        
+        ArrayList<User> arrayList = users.parallelStream().collect(new Collector<User,ArrayList,ArrayList<User>>(){
+
+            @Override
+            public Supplier supplier() {
+                return ArrayList::new;
+            }
+
+            @Override
+            public BiConsumer<ArrayList, User> accumulator() {
+                return ArrayList::add;
+            }
+
+            @Override
+            // use when it is parallelStream
+            public BinaryOperator<ArrayList> combiner() {
+                return (left, right) -> {
+                    right.addAll(left);
+                    return right;
+                };
+            }
+
+            @Override
+            public Function finisher() {
+                return a -> a;
+            }
+
+            @Override
+            public Set characteristics() {
+                return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
+            }
+            
+        });
+        
+        System.out.println("Custom ArrayList projects:\n" + arrayList + "\n");
     }
     
 }
