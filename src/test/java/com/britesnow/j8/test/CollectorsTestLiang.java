@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +22,6 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-import com.britesnow.j8.Project;
 import com.britesnow.j8.User;
 
 public class CollectorsTestLiang {
@@ -158,6 +158,51 @@ public class CollectorsTestLiang {
         });
         
         System.out.println("Custom ArrayList projects:\n" + arrayList + "\n");
+    }
+    
+    @Test
+    public void customMapCollectorTest(){
+        List<User> users = Stream.of(userArray)
+                                .map(data -> new User(data[0],data[1],data[2],data[3]))
+                                .collect(Collectors.toList());
+        Map<String,List<User>> mapCollector = users.parallelStream().collect(new Collector<User,Map,Map<String,List<User>>>(){
+            
+            @Override
+            public Supplier supplier(){
+                return HashMap::new;
+            }
+            @Override
+            public BiConsumer<Map, User> accumulator() {
+                Function<User, String> keyMapper = User::getId;
+                Function<User, User> valueMapper = Function.identity();
+                BinaryOperator<String> operator = (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
+                BiConsumer<Map, User> accumulator = (map, element) -> map.merge(keyMapper.apply(element),valueMapper.apply(element), operator);
+                return accumulator;
+            }
+
+            @Override
+            // use when it is parallelStream
+            public BinaryOperator<Map> combiner() {
+                return (left, right) -> {
+                    right.putAll(left);
+                    return right;
+                };
+            }
+
+            @Override
+            public Function finisher() {
+                return a -> a;
+            }
+
+            @Override
+            public Set characteristics() {
+                return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
+            }
+            
+        });
+        
+        System.out.println("Custom map projects:\n" + mapCollector + "\n");
+        
     }
     
 }
