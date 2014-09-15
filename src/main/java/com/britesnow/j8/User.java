@@ -1,5 +1,6 @@
 package com.britesnow.j8;
-
+@Hint("hint1")
+@Hint("hint2")
 public class User{
 
     private String id;
