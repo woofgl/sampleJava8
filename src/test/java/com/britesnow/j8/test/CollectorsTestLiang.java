@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -160,6 +161,7 @@ public class CollectorsTestLiang {
         System.out.println("Custom ArrayList projects:\n" + arrayList + "\n");
     }
     
+    //create custom collector toMap
     @Test
     public void customMapCollectorTest(){
         List<User> users = Stream.of(userArray)
@@ -205,4 +207,94 @@ public class CollectorsTestLiang {
         
     }
     
+    //custom set collector
+    @Test
+    public void customSetCollectorTest(){
+        List<User> users = Stream.of(userArray)
+                                .map(data -> new User(data[0],data[1],data[2],data[3]))
+                                .collect(Collectors.toList());
+        
+        Set<User> tosetCollector = users.stream().collect(Collectors.toSet());
+        System.out.println("to set Collector :\n" + tosetCollector + "\n");
+        Set<User> setCollector = users.parallelStream().collect(new Collector<User,Set,Set<User>>(){
+            
+            @Override
+            public Supplier supplier() {
+                return HashSet::new;
+            }
+
+            @Override
+            public BiConsumer<Set, User> accumulator() {
+                return Set::add;
+            }
+
+            @Override
+            // use when it is parallelStream
+            public BinaryOperator<Set> combiner() {
+                return (left, right) -> {
+                    right.addAll(left);
+                    return right;
+                };
+            }
+
+            @Override
+            public Function finisher() {
+                return a -> a;
+            }
+
+            @Override
+            public Set characteristics() {
+                return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
+            }
+            
+        });
+        System.out.println("set Collector:\n" + setCollector + "\n");
+    }
+    
+    @Test
+    public void groupCollectorTest(){
+        List<User> users = Stream.of(userArray)
+                                .map(data -> new User(data[0],data[1],data[2],data[3]))
+                                .collect(Collectors.toList());
+        
+        Map<String,List<User>> groupingByCollector = users.stream().collect(Collectors.groupingBy(User::getSex));
+        System.out.println("grouping by collector:\n" + groupingByCollector + "\n");
+        
+//        Map<String,List<User>> groupingCollector = users.parallelStream().collect(new Collector<User,Map,Map<String,List<User>>>(){
+//            @Override
+//            public Supplier supplier(){
+//                return HashMap::new;
+//            }
+//            @Override
+//            public BiConsumer<Map, User> accumulator() {
+//                Function<User, String> keyMapper = User::getSex;
+//                Function<User, List<User>> valueMapper = m.computeIfAbsent(key, k -> ArrayList::new);
+//                BinaryOperator<String> operator = (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
+//                BiConsumer<Map, User> accumulator = (map, element) -> map.merge(keyMapper.apply(element),valueMapper.apply(element), operator);
+//                return accumulator;
+//            }
+//
+//            @Override
+//            // use when it is parallelStream
+//            public BinaryOperator<Map> combiner() {
+//                return (left, right) -> {
+//                    right.putAll(left);
+//                    return right;
+//                };
+//            }
+//
+//            @Override
+//            public Function finisher() {
+//                return a -> a;
+//            }
+//
+//            @Override
+//            public Set characteristics() {
+//                return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
+//            }
+//            
+//        });
+//        
+//        System.out.println("grouping collector:\n" + groupingCollector + "\n");
+    }
 }
