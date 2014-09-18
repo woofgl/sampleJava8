@@ -3,6 +3,8 @@ package com.britesnow.j8.test;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -119,5 +121,30 @@ public class StreamTestLiang {
         //toArray
         User[] toArrayStream = users.stream().filter(p -> p.getSex() == "male").toArray(User[]::new);
         System.out.println("toArray :\n" + toArrayStream + "\n");
+    }
+    
+    @Test
+    public void reduceStreamTest(){
+        
+        //changeable reduce，collect
+        List<Integer> nums = new ArrayList<Integer>(Arrays.asList(1,1,null,2,3,4,null,5,6,7,8,9,10));
+        
+        List<Integer> numsWithoutNull = nums.stream().filter(num -> num != null).
+                                                        collect(ArrayList::new,
+                                                        (list, item) -> list.add(item),
+                                                        (list1, list2) -> list1.addAll(list2));
+        System.out.println("numsWithoutNull: " + numsWithoutNull);
+        
+        // override,Collectors
+        List<Integer> numsWithoutNull2 = nums.stream().filter(num -> num != null).collect(Collectors.toList());
+        System.out.println("numsWithoutNull2: " + numsWithoutNull2);
+        
+        //reduce the sum
+        Integer ints = nums.stream().filter(num -> num !=null).reduce(0,(sum,item) -> sum + item);
+        System.out.println("ints sum is : " + ints);
+        
+        //use count
+        Long ints2 = nums.stream().filter(num -> num != null).count();
+        System.out.println("ints sum is : " + ints2);
     }
 }
