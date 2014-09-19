@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -260,41 +261,53 @@ public class CollectorsTestLiang {
         Map<String,List<User>> groupingByCollector = users.stream().collect(Collectors.groupingBy(User::getSex));
         System.out.println("grouping by collector:\n" + groupingByCollector + "\n");
         
-//        Map<String,List<User>> groupingCollector = users.parallelStream().collect(new Collector<User,Map,Map<String,List<User>>>(){
-//            @Override
-//            public Supplier supplier(){
-//                return HashMap::new;
-//            }
-//            @Override
-//            public BiConsumer<Map, User> accumulator() {
-//                Function<User, String> keyMapper = User::getSex;
-//                Function<User, List<User>> valueMapper = m.computeIfAbsent(key, k -> ArrayList::new);
-//                BinaryOperator<String> operator = (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
-//                BiConsumer<Map, User> accumulator = (map, element) -> map.merge(keyMapper.apply(element),valueMapper.apply(element), operator);
-//                return accumulator;
-//            }
-//
-//            @Override
-//            // use when it is parallelStream
-//            public BinaryOperator<Map> combiner() {
-//                return (left, right) -> {
-//                    right.putAll(left);
-//                    return right;
-//                };
-//            }
-//
-//            @Override
-//            public Function finisher() {
-//                return a -> a;
-//            }
-//
-//            @Override
-//            public Set characteristics() {
-//                return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
-//            }
-//            
-//        });
-//        
-//        System.out.println("grouping collector:\n" + groupingCollector + "\n");
+        Map<String,List<User>> groupingCollector = users.parallelStream().collect(new Collector<User,Map<String,List<User>>,Map<String,List<User>>>(){
+            @Override
+            public Supplier supplier(){
+                return HashMap::new;
+            }
+            @Override
+            public BiConsumer<Map<String, List<User>>, User> accumulator() {
+                Function<User, String> keyMapper = User::getSex;
+                BiConsumer<Map<String, List<User>>, User> accumulator = (map, element) -> {
+                    String key = keyMapper.apply(element);
+                    List<User> container = map.computeIfAbsent(key, new Function<String, List<User>>() {
+                        @Override
+                        public List<User> apply(String k) {
+                            return new ArrayList<User>();
+                        }
+                    });
+                    container.add(element);
+                };
+                return accumulator;
+            }
+
+            @Override
+            // use when it is parallelStream
+            public BinaryOperator<Map<String, List<User>>> combiner() {
+                return (m1, m2) -> {
+                    for (Map.Entry<String,List<User>> e : m2.entrySet())
+                        m1.merge(e.getKey(), e.getValue(), new BinaryOperator<List<User>>(){
+                            public List<User> apply(List<User> t, List<User> u) {
+                                t.addAll(u);
+                                return t;
+                            }});
+                    return m1;
+                };
+            }
+
+            @Override
+            public Function finisher() {
+                return a -> a;
+            }
+
+            @Override
+            public Set characteristics() {
+                return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
+            }
+            
+        });
+        
+        System.out.println("grouping collector:\n" + groupingCollector + "\n");
     }
 }
